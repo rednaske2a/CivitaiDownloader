@@ -8,14 +8,17 @@ import { ArrowLeft, Download, Trash2, FolderOpen, Copy, Check, ChevronRight } fr
 import { useLocation } from "wouter";
 import { Separator } from "@/components/ui/separator";
 import { useQuery } from "@tanstack/react-query";
-import type { Model } from "@shared/schema";
+import type { Model, ImageMetadata } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { ImageModal } from "@/components/image-modal";
+import { motion } from "framer-motion";
 
 export default function ModelDetail() {
   const [, params] = useRoute("/model/:id");
   const [, setLocation] = useLocation();
   const [copiedTag, setCopiedTag] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<ImageMetadata | null>(null);
   const { toast } = useToast();
 
   const { data: model } = useQuery<Model>({
@@ -252,20 +255,42 @@ export default function ModelDetail() {
                   </CardContent>
                 </Card>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {model.galleryImages.map((img, i) => (
-                    <Card key={i} className="overflow-hidden border-card-border hover-elevate">
-                      <CardContent className="p-0">
-                        <img
-                          src={img}
-                          alt={`Gallery image ${i + 1}`}
-                          className="w-full h-auto"
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {model.galleryImages.map((img, i) => (
+                      <motion.div
+                        key={img.id}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: i * 0.05 }}
+                      >
+                        <Card 
+                          className="overflow-hidden border-card-border hover-elevate cursor-pointer group"
+                          onClick={() => setSelectedImage(img)}
                           data-testid={`gallery-image-${i}`}
-                        />
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                        >
+                          <CardContent className="p-0 relative">
+                            <img
+                              src={img.url}
+                              alt={`Gallery image ${i + 1}`}
+                              className="w-full h-auto transition-transform group-hover:scale-105"
+                            />
+                            {img.positiveScore > 0 && (
+                              <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white px-2 py-1 rounded-md text-xs font-semibold">
+                                ❤️ {img.positiveScore}
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </div>
+                  <ImageModal
+                    image={selectedImage}
+                    isOpen={!!selectedImage}
+                    onClose={() => setSelectedImage(null)}
+                  />
+                </>
               )}
             </TabsContent>
           </Tabs>

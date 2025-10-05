@@ -4,7 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Eye, EyeOff, FolderOpen, Save } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
+import { Eye, EyeOff, FolderOpen, Save, Download, Image as ImageIcon, Zap, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import type { AppSettings } from "@shared/schema";
@@ -138,6 +140,128 @@ export default function Settings() {
               <p className="text-xs text-muted-foreground">
                 Models will be organized into subdirectories based on type and base model
               </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-card-border">
+          <CardHeader>
+            <CardTitle>Download Preferences</CardTitle>
+            <CardDescription>
+              Customize how models and images are downloaded
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <Download className="h-4 w-4 text-muted-foreground" />
+                  <Label htmlFor="auto-download" className="font-medium">Auto-download images</Label>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Automatically fetch top 100 images when downloading a model
+                </p>
+              </div>
+              <Switch
+                id="auto-download"
+                checked={settings.autoDownloadImages}
+                onCheckedChange={(checked) => setSettings({ ...settings, autoDownloadImages: checked })}
+                data-testid="switch-auto-download"
+              />
+            </div>
+
+            <Separator />
+
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                <Label htmlFor="max-images" className="font-medium">Maximum gallery images</Label>
+              </div>
+              <div className="flex items-center gap-4">
+                <Slider
+                  id="max-images"
+                  min={10}
+                  max={200}
+                  step={10}
+                  value={[settings.maxGalleryImages]}
+                  onValueChange={(value) => setSettings({ ...settings, maxGalleryImages: value[0] })}
+                  className="flex-1"
+                  data-testid="slider-max-images"
+                />
+                <Input
+                  type="number"
+                  min={10}
+                  max={200}
+                  value={settings.maxGalleryImages}
+                  onChange={(e) => setSettings({ ...settings, maxGalleryImages: parseInt(e.target.value) || 100 })}
+                  className="w-20"
+                  data-testid="input-max-images"
+                />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Number of top-rated images to fetch per model (ranked by community reactions)
+              </p>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Zap className="h-4 w-4 text-muted-foreground" />
+                <Label htmlFor="concurrent-downloads" className="font-medium">Concurrent downloads</Label>
+              </div>
+              <div className="flex items-center gap-4">
+                <Slider
+                  id="concurrent-downloads"
+                  min={1}
+                  max={5}
+                  step={1}
+                  value={[settings.concurrentDownloads]}
+                  onValueChange={(value) => setSettings({ ...settings, concurrentDownloads: value[0] })}
+                  className="flex-1"
+                  data-testid="slider-concurrent-downloads"
+                />
+                <Input
+                  type="number"
+                  min={1}
+                  max={5}
+                  value={settings.concurrentDownloads}
+                  onChange={(e) => setSettings({ ...settings, concurrentDownloads: parseInt(e.target.value) || 3 })}
+                  className="w-20"
+                  data-testid="input-concurrent-downloads"
+                />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Maximum number of simultaneous downloads (1-5)
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-card-border">
+          <CardHeader>
+            <CardTitle>UI Preferences</CardTitle>
+            <CardDescription>
+              Customize the look and feel of the interface
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-muted-foreground" />
+                  <Label htmlFor="animations" className="font-medium">Enable animations</Label>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Smooth transitions and micro-interactions throughout the app
+                </p>
+              </div>
+              <Switch
+                id="animations"
+                checked={settings.enableAnimations}
+                onCheckedChange={(checked) => setSettings({ ...settings, enableAnimations: checked })}
+                data-testid="switch-animations"
+              />
             </div>
           </CardContent>
         </Card>
