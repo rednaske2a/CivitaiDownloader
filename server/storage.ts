@@ -96,7 +96,33 @@ export class MemStorage implements IStorage {
 
     for (const model of models) {
       if (model.galleryImages && model.galleryImages.length > 0) {
-        allImages.push(...model.galleryImages);
+        const imagesWithScore = model.galleryImages.map(img => {
+          const defaultStats = {
+            cryCount: 0,
+            laughCount: 0,
+            likeCount: 0,
+            dislikeCount: 0,
+            heartCount: 0,
+            commentCount: 0,
+          };
+          
+          const stats = {
+            ...defaultStats,
+            ...(img.stats || {}),
+          };
+          
+          const likeCount = stats.likeCount || 0;
+          const heartCount = stats.heartCount || 0;
+          const laughCount = stats.laughCount || 0;
+          const positiveScore = likeCount + heartCount + laughCount;
+          
+          return {
+            ...img,
+            stats,
+            positiveScore,
+          };
+        });
+        allImages.push(...imagesWithScore);
       }
     }
 
