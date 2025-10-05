@@ -23,7 +23,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const wss = new WebSocketServer({ 
     server: httpServer, 
     path: "/ws",
-    verifyClient: (info) => {
+    verifyClient: (info: { origin: string; secure: boolean; req: any }) => {
       console.log("[WebSocket] Connection attempt from:", info.origin);
       return true;
     }
