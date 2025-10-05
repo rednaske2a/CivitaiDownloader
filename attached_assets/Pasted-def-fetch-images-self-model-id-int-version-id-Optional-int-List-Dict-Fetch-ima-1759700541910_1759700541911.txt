@@ -1,0 +1,68 @@
+def fetch_images(self, model_id: int, version_id: Optional[int]) -> List[Dict]:
+        """Fetch images for the model"""
+        def fetch_all_pages(nsfw_flag: bool) -> List[Dict]:
+            items = []
+            cursor = None
+            while True:
+                if self.is_cancelled:
+                    return []
+                    
+                params = {
+                    "modelId": model_id,
+                    "limit": self.config["fetch_batch_size"],
+                    "nsfw": str(nsfw_flag).lower()
+                }
+                
+                if version_id:
+                    params["modelVersionId"] = version_id
+                    
+                if cursor:
+                    params["cursor"] = cursor
+                    
+                self.log(f"Fetching images page (nsfw={nsfw_flag})...", "info")
+                
+                resp = self.fetch_json("https://civitai.com/api/v1/images", params)
+                if not resp:
+                    break
+                    
+                page = resp.get("items", [])
+                if not page:
+                    break
+                    
+                items.extend(page)
+                self.log(f"Fetched {len(page)} images (total: {len(items)})", "info")
+                
+                cursor = resp.get("metadata", {}).get("nextCursor")
+                if not cursor:
+                    break
+                    
+            return items
+        
+        try:
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                futures = {
+                    executor.submit(fetch_all_pages, True): "nsfw",
+                    executor.submit(fetch_all_pages, False): "sfw"
+                }
+                results = {v: f.result() for f, v in futures.items()}
+            
+            nsfw_items = results.get("nsfw", [])
+            sfw_items = results.get("sfw", [])
+            all_items = nsfw_items + sfw_items
+            
+            # Remove duplicates
+            unique = {img["id"]: img for img in all_items}.values()
+            
+            # Sort by score (likes + hearts + laughs)
+            def score(img):
+                stats = img.get("stats", {})
+                return stats.get("likeCount", 0) + stats.get("heartCount", 0) + stats.get("laughCount", 0)
+                
+            sorted_items = sorted(unique, key=score, reverse=True)
+            
+            # Limit to top N images
+            return sorted_items[:self.config["top_image_count"]]
+            
+        except Exception as e:
+            self.log(f"Error fetching images: {str(e)}", "error")
+            return []

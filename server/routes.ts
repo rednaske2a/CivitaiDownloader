@@ -240,5 +240,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/gallery/images", async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
+      const includeNSFW = req.query.includeNSFW !== 'false';
+      
+      const images = await storage.getAllGalleryImages(limit, includeNSFW);
+      res.json(images);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get gallery images" });
+    }
+  });
+
   return httpServer;
 }

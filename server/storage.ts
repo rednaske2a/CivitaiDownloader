@@ -1,4 +1,4 @@
-import type { Model, DownloadTask, AppSettings, StorageStats, ModelType, BaseModel } from "@shared/schema";
+import type { Model, DownloadTask, AppSettings, StorageStats, ModelType, BaseModel, ImageMetadata } from "@shared/schema";
 import { randomUUID } from "crypto";
 import path from "path";
 
@@ -12,6 +12,9 @@ export interface IStorage {
   getModelById(id: string): Promise<Model | undefined>;
   addModel(model: Omit<Model, "id">): Promise<Model>;
   deleteModel(id: string): Promise<boolean>;
+  
+  // Gallery
+  getAllGalleryImages(limit?: number, includeNSFW?: boolean): Promise<ImageMetadata[]>;
   
   // Download Queue
   getDownloadQueue(): Promise<DownloadTask[]>;
@@ -85,6 +88,26 @@ export class MemStorage implements IStorage {
 
   async deleteModel(id: string): Promise<boolean> {
     return this.models.delete(id);
+  }
+
+  async getAllGalleryImages(limit: number = 100, includeNSFW: boolean = true): Promise<ImageMetadata[]> {
+    const models = Array.from(this.models.values());
+    const allImages: ImageMetadata[] = [];
+
+    for (const model of models) {
+      if (model.galleryImages && model.galleryImages.length > 0) {
+        allImages.push(...model.galleryImages);
+      }
+    }
+
+    let filteredImages = allImages;
+    if (!includeNSFW) {
+      filteredImages = allImages.filter(img => !img.nsfw);
+    }
+
+    filteredImages.sort((a, b) => b.positiveScore - a.positiveScore);
+    
+    return filteredImages.slice(0, limit);
   }
 
   async getDownloadQueue(): Promise<DownloadTask[]> {
