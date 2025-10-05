@@ -21,6 +21,8 @@ This is a full-stack TypeScript application that allows users to:
 - TanStack Query for data fetching
 - Shadcn UI components with Tailwind CSS
 - WebSocket for real-time updates (with polling fallback)
+- React Masonry CSS for responsive image galleries
+- Yet Another React Lightbox for image viewing
 
 **Backend:**
 - Node.js with Express
@@ -80,10 +82,13 @@ Models are organized by type and base model:
 - URL input for adding models
 - Active downloads with real-time progress
 
-### Gallery
-- Grid view of all downloaded models
-- Search by name, type, or base model
-- Hover actions (view, delete)
+### Gallery (Image Gallery)
+- Full-width responsive masonry layout displaying top 100 images from all downloaded models
+- Images sorted by popularity score (likes + hearts + laughs)
+- Lightbox viewer for full-screen image viewing
+- NSFW content toggle filter
+- Image statistics overlay on hover (likes, hearts, laughs, total score)
+- Smooth animations and transitions
 
 ### Model Detail
 - Full model description
@@ -145,6 +150,7 @@ shared/
 - `DELETE /api/queue/:id` - Cancel download
 - `DELETE /api/queue` - Clear queue
 - `GET /api/statistics` - Get storage statistics
+- `GET /api/gallery/images` - Get top gallery images (params: limit, includeNSFW)
 - `WS /ws` - WebSocket for real-time updates
 
 ## Design System
