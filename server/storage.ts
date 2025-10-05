@@ -1,5 +1,6 @@
 import type { Model, DownloadTask, AppSettings, StorageStats, ModelType, BaseModel } from "@shared/schema";
 import { randomUUID } from "crypto";
+import path from "path";
 
 export interface IStorage {
   // Settings
@@ -33,20 +34,20 @@ export class MemStorage implements IStorage {
       civitaiApiKey: "",
       comfyuiPath: "",
       categoryMappings: {
-        "LORA_Illustrious": "models/loras/Illustrious",
-        "LORA_SDXL": "models/loras/SDXL",
-        "LORA_SD15": "models/loras/SD15",
-        "LORA_Pony": "models/loras/Pony",
-        "LORA_Flux": "models/loras/Flux",
-        "Checkpoint_SDXL": "models/checkpoints/SDXL",
-        "Checkpoint_SD15": "models/checkpoints/SD15",
-        "Checkpoint_Pony": "models/checkpoints/Pony",
-        "Checkpoint_Flux": "models/checkpoints/Flux",
-        "TextualInversion": "models/embeddings",
-        "Hypernetwork": "models/hypernetworks",
-        "AestheticGradient": "models/aesthetic_gradients",
-        "Controlnet": "models/controlnet",
-        "Poses": "models/poses",
+        "LORA_Illustrious": path.join("models", "loras", "Illustrious"),
+        "LORA_SDXL": path.join("models", "loras", "SDXL"),
+        "LORA_SD15": path.join("models", "loras", "SD15"),
+        "LORA_Pony": path.join("models", "loras", "Pony"),
+        "LORA_Flux": path.join("models", "loras", "Flux"),
+        "Checkpoint_SDXL": path.join("models", "checkpoints", "SDXL"),
+        "Checkpoint_SD15": path.join("models", "checkpoints", "SD15"),
+        "Checkpoint_Pony": path.join("models", "checkpoints", "Pony"),
+        "Checkpoint_Flux": path.join("models", "checkpoints", "Flux"),
+        "TextualInversion": path.join("models", "embeddings"),
+        "Hypernetwork": path.join("models", "hypernetworks"),
+        "AestheticGradient": path.join("models", "aesthetic_gradients"),
+        "Controlnet": path.join("models", "controlnet"),
+        "Poses": path.join("models", "poses"),
       },
     };
     this.models = new Map();

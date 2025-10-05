@@ -101,14 +101,15 @@ export class DownloadManager extends EventEmitter {
       if (settings.comfyuiPath && fs.existsSync(settings.comfyuiPath)) {
         try {
           const folderKey = `${task.type}_${task.baseModel.replace(/[.\s]/g, "")}`;
-          const folderPath = settings.categoryMappings[folderKey] || `models/${task.type.toLowerCase()}`;
+          const folderPath = settings.categoryMappings[folderKey] || path.join("models", task.type.toLowerCase());
           const fullPath = path.join(settings.comfyuiPath, folderPath);
 
           if (!fs.existsSync(fullPath)) {
             fs.mkdirSync(fullPath, { recursive: true });
           }
 
-          const fileName = primaryFile.name;
+          // Sanitize filename for Windows - remove invalid characters
+          const fileName = primaryFile.name.replace(/[<>:"|?*]/g, "_");
           filePath = path.join(fullPath, fileName);
 
           const fileBuffer = await this.civitaiService.downloadFile(primaryFile.downloadUrl, (progress, downloaded, total) => {
@@ -127,7 +128,9 @@ export class DownloadManager extends EventEmitter {
           console.log(`[Download] Saved model file to: ${filePath}`);
 
           if (version.images.length > 0) {
-            const imagesPath = path.join(fullPath, "gallery", model.name.replace(/[^a-z0-9]/gi, "_"));
+            // Sanitize folder name for Windows - remove invalid characters
+            const sanitizedModelName = model.name.replace(/[<>:"|?*\/\\]/g, "_").replace(/[^a-z0-9_-]/gi, "_");
+            const imagesPath = path.join(fullPath, "gallery", sanitizedModelName);
             if (!fs.existsSync(imagesPath)) {
               fs.mkdirSync(imagesPath, { recursive: true });
             }
@@ -161,7 +164,9 @@ export class DownloadManager extends EventEmitter {
           await new Promise(resolve => setTimeout(resolve, 200));
         }
         
-        filePath = `/simulated/path/${task.type.toLowerCase()}/${model.name.replace(/[^a-z0-9]/gi, "_")}.safetensors`;
+        // Use path.join for cross-platform compatibility even in simulated mode
+        const sanitizedModelName = model.name.replace(/[^a-z0-9]/gi, "_");
+        filePath = path.join("simulated", "path", task.type.toLowerCase(), `${sanitizedModelName}.safetensors`);
         galleryImages.push(...version.images.slice(0, 6).map((img, i) => img.url));
       }
 
