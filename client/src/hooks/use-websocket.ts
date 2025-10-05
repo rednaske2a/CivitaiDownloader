@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import { queryClient } from "@/lib/queryClient";
 
 type WebSocketMessage = {
@@ -8,55 +8,92 @@ type WebSocketMessage = {
 
 export function useWebSocket() {
   const ws = useRef<WebSocket | null>(null);
+  const reconnectAttempts = useRef(0);
+  const maxReconnectAttempts = 3;
+  const pollingInterval = useRef<NodeJS.Timeout | null>(null);
 
-  const connect = useCallback(() => {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}`;
+  const startPolling = () => {
+    if (pollingInterval.current) return;
     
-    ws.current = new WebSocket(wsUrl);
+    console.log("Starting polling fallback for real-time updates");
+    pollingInterval.current = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ["/api/queue"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/models"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/statistics"] });
+    }, 2000);
+  };
 
-    ws.current.onopen = () => {
-      console.log("WebSocket connected");
-    };
+  const stopPolling = () => {
+    if (pollingInterval.current) {
+      clearInterval(pollingInterval.current);
+      pollingInterval.current = null;
+    }
+  };
 
-    ws.current.onmessage = (event) => {
-      try {
-        const message: WebSocketMessage = JSON.parse(event.data);
-        
-        switch (message.event) {
-          case "queue-updated":
-            queryClient.invalidateQueries({ queryKey: ["/api/queue"] });
-            break;
-          case "task-updated":
-            queryClient.invalidateQueries({ queryKey: ["/api/queue"] });
-            break;
-          case "task-completed":
-            queryClient.invalidateQueries({ queryKey: ["/api/queue"] });
-            queryClient.invalidateQueries({ queryKey: ["/api/models"] });
-            queryClient.invalidateQueries({ queryKey: ["/api/statistics"] });
-            break;
-          case "task-failed":
-            queryClient.invalidateQueries({ queryKey: ["/api/queue"] });
-            break;
-          case "models-updated":
-            queryClient.invalidateQueries({ queryKey: ["/api/models"] });
-            queryClient.invalidateQueries({ queryKey: ["/api/statistics"] });
-            break;
+  const connect = () => {
+    if (reconnectAttempts.current >= maxReconnectAttempts) {
+      console.log("Max WebSocket reconnection attempts reached, using polling");
+      startPolling();
+      return;
+    }
+
+    try {
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      
+      ws.current = new WebSocket(wsUrl);
+
+      ws.current.onopen = () => {
+        console.log("WebSocket connected successfully");
+        reconnectAttempts.current = 0;
+        stopPolling();
+      };
+
+      ws.current.onmessage = (event) => {
+        try {
+          const message: WebSocketMessage = JSON.parse(event.data);
+          
+          switch (message.event) {
+            case "queue-updated":
+            case "task-updated":
+            case "task-failed":
+              queryClient.invalidateQueries({ queryKey: ["/api/queue"] });
+              break;
+            case "task-completed":
+            case "models-updated":
+              queryClient.invalidateQueries({ queryKey: ["/api/queue"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/models"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/statistics"] });
+              break;
+          }
+        } catch (error) {
+          console.error("Failed to parse WebSocket message:", error);
         }
-      } catch (error) {
-        console.error("Failed to parse WebSocket message:", error);
+      };
+
+      ws.current.onerror = (error) => {
+        console.warn("WebSocket error, will retry or fallback to polling");
+      };
+
+      ws.current.onclose = () => {
+        ws.current = null;
+        reconnectAttempts.current++;
+        
+        if (reconnectAttempts.current < maxReconnectAttempts) {
+          console.log(`WebSocket disconnected, attempting reconnect ${reconnectAttempts.current}/${maxReconnectAttempts}`);
+          setTimeout(connect, 3000);
+        } else {
+          startPolling();
+        }
+      };
+    } catch (error) {
+      console.error("Failed to create WebSocket:", error);
+      reconnectAttempts.current++;
+      if (reconnectAttempts.current >= maxReconnectAttempts) {
+        startPolling();
       }
-    };
-
-    ws.current.onerror = (error) => {
-      console.error("WebSocket error:", error);
-    };
-
-    ws.current.onclose = () => {
-      console.log("WebSocket disconnected, reconnecting...");
-      setTimeout(connect, 3000);
-    };
-  }, []);
+    }
+  };
 
   useEffect(() => {
     connect();
@@ -65,6 +102,7 @@ export function useWebSocket() {
       if (ws.current) {
         ws.current.close();
       }
+      stopPolling();
     };
-  }, [connect]);
+  }, []);
 }

@@ -17,17 +17,41 @@ const updateSettingsSchema = z.object({
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
-  const wss = new WebSocketServer({ server: httpServer });
+  
+  console.log("[WebSocket] Initializing WebSocket server on path /ws");
+  
+  const wss = new WebSocketServer({ 
+    server: httpServer, 
+    path: "/ws",
+    verifyClient: (info) => {
+      console.log("[WebSocket] Connection attempt from:", info.origin);
+      return true;
+    }
+  });
 
   const clients = new Set<WebSocket>();
 
-  wss.on("connection", (ws) => {
+  wss.on("listening", () => {
+    console.log("[WebSocket] Server is listening");
+  });
+
+  wss.on("error", (error) => {
+    console.error("[WebSocket] Server error:", error);
+  });
+
+  wss.on("connection", (ws, request) => {
     clients.add(ws);
-    console.log("WebSocket client connected");
+    console.log(`[WebSocket] Client connected from ${request.socket.remoteAddress}. Total clients: ${clients.size}`);
+
+    ws.send(JSON.stringify({ event: "connected", data: { message: "Connected to CivitAI Manager" } }));
 
     ws.on("close", () => {
       clients.delete(ws);
-      console.log("WebSocket client disconnected");
+      console.log(`[WebSocket] Client disconnected. Total clients: ${clients.size}`);
+    });
+
+    ws.on("error", (error) => {
+      console.error("[WebSocket] Client error:", error);
     });
   });
 
@@ -79,6 +103,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/settings", async (req, res) => {
     try {
       const validated = updateSettingsSchema.parse(req.body);
+      
+      if (validated.comfyuiPath) {
+        const fs = await import("fs");
+        if (!fs.existsSync(validated.comfyuiPath)) {
+          res.status(400).json({ 
+            error: "ComfyUI path does not exist",
+            message: `The path "${validated.comfyuiPath}" could not be found. Please ensure it exists or leave it empty to simulate downloads.`
+          });
+          return;
+        }
+        
+        try {
+          fs.accessSync(validated.comfyuiPath, fs.constants.W_OK);
+        } catch {
+          res.status(400).json({ 
+            error: "ComfyUI path is not writable",
+            message: `The path "${validated.comfyuiPath}" exists but is not writable. Please check permissions.`
+          });
+          return;
+        }
+      }
+      
       const settings = await storage.updateSettings(validated);
       
       if (validated.civitaiApiKey) {

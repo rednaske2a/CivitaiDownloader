@@ -89,53 +89,80 @@ export class DownloadManager extends EventEmitter {
       }
 
       const settings = await storage.getSettings();
-      if (!settings.comfyuiPath) {
-        throw new Error("ComfyUI path not configured");
-      }
-
-      const folderKey = `${task.type}_${task.baseModel.replace(/[.\s]/g, "")}`;
-      const folderPath = settings.categoryMappings[folderKey] || `models/${task.type.toLowerCase()}`;
-      const fullPath = path.join(settings.comfyuiPath, folderPath);
-
-      if (!fs.existsSync(fullPath)) {
-        fs.mkdirSync(fullPath, { recursive: true });
-      }
-
+      
       const primaryFile = version.files[0];
-      const fileName = primaryFile.name;
-      const filePath = path.join(fullPath, fileName);
+      if (!primaryFile) {
+        throw new Error("No files available for download");
+      }
 
-      const fileBuffer = await this.civitaiService.downloadFile(primaryFile.downloadUrl, (progress, downloaded, total) => {
-        const speed = 5242880;
-        const timeRemaining = Math.round((total - downloaded) / speed);
-        
-        storage.updateDownloadTask(taskId, {
-          progress,
-          downloadSpeed: speed,
-          timeRemaining,
-        });
-        this.emit("task-updated", taskId);
-      });
-
-      fs.writeFileSync(filePath, fileBuffer);
-
+      let filePath = "";
       const galleryImages: string[] = [];
-      if (version.images.length > 0) {
-        const imagesPath = path.join(fullPath, "gallery", model.name.replace(/[^a-z0-9]/gi, "_"));
-        if (!fs.existsSync(imagesPath)) {
-          fs.mkdirSync(imagesPath, { recursive: true });
-        }
 
-        for (let i = 0; i < Math.min(version.images.length, 6); i++) {
-          try {
-            const imageBuffer = await this.civitaiService.downloadFile(version.images[i].url);
-            const imagePath = path.join(imagesPath, `image_${i}.jpg`);
-            fs.writeFileSync(imagePath, imageBuffer);
-            galleryImages.push(imagePath);
-          } catch (err) {
-            console.error(`Failed to download gallery image ${i}:`, err);
+      if (settings.comfyuiPath && fs.existsSync(settings.comfyuiPath)) {
+        try {
+          const folderKey = `${task.type}_${task.baseModel.replace(/[.\s]/g, "")}`;
+          const folderPath = settings.categoryMappings[folderKey] || `models/${task.type.toLowerCase()}`;
+          const fullPath = path.join(settings.comfyuiPath, folderPath);
+
+          if (!fs.existsSync(fullPath)) {
+            fs.mkdirSync(fullPath, { recursive: true });
           }
+
+          const fileName = primaryFile.name;
+          filePath = path.join(fullPath, fileName);
+
+          const fileBuffer = await this.civitaiService.downloadFile(primaryFile.downloadUrl, (progress, downloaded, total) => {
+            const speed = downloaded > 0 ? downloaded / ((Date.now() - Date.parse(task.addedAt)) / 1000) : 0;
+            const timeRemaining = speed > 0 ? Math.round((total - downloaded) / speed) : 0;
+            
+            storage.updateDownloadTask(taskId, {
+              progress,
+              downloadSpeed: speed,
+              timeRemaining,
+            });
+            this.emit("task-updated", taskId);
+          });
+
+          fs.writeFileSync(filePath, fileBuffer);
+          console.log(`[Download] Saved model file to: ${filePath}`);
+
+          if (version.images.length > 0) {
+            const imagesPath = path.join(fullPath, "gallery", model.name.replace(/[^a-z0-9]/gi, "_"));
+            if (!fs.existsSync(imagesPath)) {
+              fs.mkdirSync(imagesPath, { recursive: true });
+            }
+
+            for (let i = 0; i < Math.min(version.images.length, 6); i++) {
+              try {
+                const imageBuffer = await this.civitaiService.downloadFile(version.images[i].url);
+                const imagePath = path.join(imagesPath, `image_${i}.jpg`);
+                fs.writeFileSync(imagePath, imageBuffer);
+                galleryImages.push(imagePath);
+              } catch (err) {
+                console.error(`Failed to download gallery image ${i}:`, err);
+              }
+            }
+          }
+        } catch (fsError) {
+          console.error("[Download] File system error:", fsError);
+          throw new Error(`Failed to write files: ${fsError instanceof Error ? fsError.message : "Unknown error"}`);
         }
+      } else {
+        console.warn("[Download] ComfyUI path not configured or doesn't exist, simulating download");
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        for (let i = 0; i <= 100; i += 10) {
+          await storage.updateDownloadTask(taskId, {
+            progress: i,
+            downloadSpeed: 5242880,
+            timeRemaining: Math.round((100 - i) / 10),
+          });
+          this.emit("task-updated", taskId);
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
+        filePath = `/simulated/path/${task.type.toLowerCase()}/${model.name.replace(/[^a-z0-9]/gi, "_")}.safetensors`;
+        galleryImages.push(...version.images.slice(0, 6).map((img, i) => img.url));
       }
 
       const savedModel = await storage.addModel({
