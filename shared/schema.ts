@@ -95,7 +95,7 @@ export interface AppSettings {
   autoDownloadImages: boolean;
   maxGalleryImages: number;
   concurrentDownloads: number;
-  downloadOnlyNsfw: boolean;
+  includeNSFWImages: boolean;
   enableAnimations: boolean;
 }
 

@@ -154,19 +154,65 @@ export class CivitAIService {
     return Buffer.from(response.data);
   }
 
-  async getImagesForVersion(versionId: number, maxImages: number = 100): Promise<ImageMetadata[]> {
+  async getImagesForVersion(
+    versionId: number, 
+    modelId: number,
+    maxImages: number = 100, 
+    includeNSFW: boolean = true
+  ): Promise<ImageMetadata[]> {
     try {
-      const response = await axios.get(`${CIVITAI_API_BASE}/model-versions/${versionId}`, {
-        headers: this.getHeaders(),
-      });
+      const allImages: CivitAIImage[] = [];
       
-      const version: CivitAIModelVersion = response.data;
-      
-      if (!version.images || version.images.length === 0) {
-        return [];
+      const fetchPage = async (nsfw: boolean): Promise<CivitAIImage[]> => {
+        const pageImages: CivitAIImage[] = [];
+        let cursor: string | undefined = undefined;
+        
+        while (pageImages.length < maxImages) {
+          const params: any = {
+            modelId,
+            modelVersionId: versionId,
+            limit: Math.min(100, maxImages - pageImages.length),
+            nsfw: nsfw.toString(),
+          };
+          
+          if (cursor) {
+            params.cursor = cursor;
+          }
+          
+          const response = await axios.get(`${CIVITAI_API_BASE}/images`, {
+            headers: this.getHeaders(),
+            params,
+          });
+          
+          const items = response.data.items || [];
+          if (items.length === 0) break;
+          
+          pageImages.push(...items);
+          
+          if (pageImages.length >= maxImages) break;
+          
+          cursor = response.data.metadata?.nextCursor;
+          if (!cursor) break;
+        }
+        
+        return pageImages.slice(0, maxImages);
+      };
+
+      if (includeNSFW) {
+        const [nsfwImages, sfwImages] = await Promise.all([
+          fetchPage(true),
+          fetchPage(false),
+        ]);
+        allImages.push(...nsfwImages, ...sfwImages);
+      } else {
+        const sfwImages = await fetchPage(false);
+        allImages.push(...sfwImages);
       }
 
-      const imagesWithScores: ImageMetadata[] = version.images.map(img => {
+      const uniqueImages = new Map<number, CivitAIImage>();
+      allImages.forEach(img => uniqueImages.set(img.id, img));
+
+      const imagesWithScores: ImageMetadata[] = Array.from(uniqueImages.values()).map(img => {
         const stats = img.stats || {
           cryCount: 0,
           laughCount: 0,

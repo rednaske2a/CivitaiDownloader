@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { downloadManager } from "./services/download-manager";
+import { modelScanner } from "./services/model-scanner";
 import { z } from "zod";
 
 const addDownloadSchema = z.object({
@@ -129,6 +130,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (validated.civitaiApiKey) {
         downloadManager.updateApiKey(validated.civitaiApiKey);
+      }
+      
+      if (validated.comfyuiPath) {
+        modelScanner.scanExistingModels().catch(err => {
+          console.error("[Settings] Model scan failed:", err);
+        });
       }
       
       res.json(settings);

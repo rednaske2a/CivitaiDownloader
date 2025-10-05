@@ -97,7 +97,14 @@ export class DownloadManager extends EventEmitter {
       }
 
       let filePath = "";
-      const galleryImages = await this.civitaiService.getImagesForVersion(task.versionId, settings.maxGalleryImages);
+      const galleryImages = settings.autoDownloadImages 
+        ? await this.civitaiService.getImagesForVersion(
+            task.versionId, 
+            task.modelId, 
+            settings.maxGalleryImages,
+            settings.includeNSFWImages
+          )
+        : [];
 
       if (settings.comfyuiPath && fs.existsSync(settings.comfyuiPath)) {
         try {

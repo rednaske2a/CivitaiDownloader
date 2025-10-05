@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { Eye, EyeOff, FolderOpen, Save, Download, Image as ImageIcon, Zap, Sparkles } from "lucide-react";
+import { Eye, EyeOff, FolderOpen, Save, Download, Image as ImageIcon, Zap, Sparkles, ShieldAlert } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import type { AppSettings } from "@shared/schema";
@@ -22,7 +22,7 @@ export default function Settings() {
     autoDownloadImages: true,
     maxGalleryImages: 100,
     concurrentDownloads: 3,
-    downloadOnlyNsfw: false,
+    includeNSFWImages: true,
     enableAnimations: true,
   });
 
@@ -201,6 +201,26 @@ export default function Settings() {
               <p className="text-sm text-muted-foreground">
                 Number of top-rated images to fetch per model (ranked by community reactions)
               </p>
+            </div>
+
+            <Separator />
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <ShieldAlert className="h-4 w-4 text-muted-foreground" />
+                  <Label htmlFor="include-nsfw" className="font-medium">Include NSFW images</Label>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Download NSFW/adult content images from model galleries
+                </p>
+              </div>
+              <Switch
+                id="include-nsfw"
+                checked={settings.includeNSFWImages}
+                onCheckedChange={(checked) => setSettings({ ...settings, includeNSFWImages: checked })}
+                data-testid="switch-include-nsfw"
+              />
             </div>
 
             <Separator />

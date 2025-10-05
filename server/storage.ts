@@ -55,7 +55,7 @@ export class MemStorage implements IStorage {
       autoDownloadImages: true,
       maxGalleryImages: 100,
       concurrentDownloads: 3,
-      downloadOnlyNsfw: false,
+      includeNSFWImages: true,
       enableAnimations: true,
     };
     this.models = new Map();
