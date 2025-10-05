@@ -82,8 +82,8 @@ echo    - Enter your CivitAI API key
 echo    - Optionally set your ComfyUI installation path
 echo.
 echo 2. Start the application:
-echo    - Run: npm run dev
-echo    - Or double-click: start.bat
+echo    - Double-click: start.bat
+echo    - Or run: start.bat from command prompt
 echo.
 echo 3. Access the application:
 echo    - Open your browser and go to: http://localhost:5000
@@ -99,7 +99,7 @@ if /i "%START_NOW%"=="Y" (
     echo Press Ctrl+C to stop the server.
     echo.
     set NODE_ENV=development
-    npx cross-env NODE_ENV=development tsx server/index.ts
+    node node_modules\tsx\dist\cli.mjs server\index.ts
 ) else (
     echo.
     echo You can start the application later by running: start.bat
