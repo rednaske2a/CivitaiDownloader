@@ -98,10 +98,11 @@ if /i "%START_NOW%"=="Y" (
     echo Starting CivitAI Model Manager...
     echo Press Ctrl+C to stop the server.
     echo.
-    npm run dev
+    set NODE_ENV=development
+    npx cross-env NODE_ENV=development tsx server/index.ts
 ) else (
     echo.
-    echo You can start the application later by running: npm run dev
+    echo You can start the application later by running: start.bat
     echo.
 )
 

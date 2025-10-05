@@ -243,6 +243,12 @@ If you don't have ComfyUI installed:
 #### "Node.js is not installed"
 **Solution**: Install Node.js from [nodejs.org](https://nodejs.org/) and restart your terminal/command prompt.
 
+#### "NODE_ENV is not recognized" (Windows)
+**Solution**: 
+1. Run `setup.bat` again to ensure the `cross-env` package is installed
+2. Use `start.bat` instead of `npm run dev` to start the application
+3. The batch scripts are now configured to work properly on Windows
+
 #### "Failed to install dependencies"
 **Solution**: 
 1. Check your internet connection
