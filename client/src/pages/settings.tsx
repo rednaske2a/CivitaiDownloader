@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,21 +6,44 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, FolderOpen, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import type { AppSettings } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function Settings() {
   const { toast } = useToast();
   const [showApiKey, setShowApiKey] = useState(false);
-  const [settings, setSettings] = useState({
+  const [settings, setSettings] = useState<AppSettings>({
     civitaiApiKey: "",
-    comfyuiPath: "C:/ComfyUI",
+    comfyuiPath: "",
+    categoryMappings: {},
   });
 
-  const handleSave = () => {
-    console.log("Saving settings:", settings);
-    toast({
-      title: "Settings saved",
-      description: "Your configuration has been updated successfully.",
-    });
+  const { data: savedSettings } = useQuery<AppSettings>({
+    queryKey: ["/api/settings"],
+  });
+
+  useEffect(() => {
+    if (savedSettings) {
+      setSettings(savedSettings);
+    }
+  }, [savedSettings]);
+
+  const handleSave = async () => {
+    try {
+      await apiRequest("POST", "/api/settings", settings);
+      queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
+      toast({
+        title: "Settings saved",
+        description: "Your configuration has been updated successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save settings.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -96,7 +119,7 @@ export default function Settings() {
                 <Input
                   id="comfyui-path"
                   type="text"
-                  placeholder="C:/ComfyUI"
+                  placeholder="C:/ComfyUI or /home/user/ComfyUI"
                   value={settings.comfyuiPath}
                   onChange={(e) => setSettings({ ...settings, comfyuiPath: e.target.value })}
                   className="font-mono"
@@ -133,30 +156,14 @@ export default function Settings() {
               </div>
               <Separator />
               <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-4 items-center">
-                  <span className="text-sm">LORA (Illustrious)</span>
-                  <code className="text-xs font-mono bg-muted px-3 py-2 rounded-md">
-                    models/loras/Illustrious
-                  </code>
-                </div>
-                <div className="grid grid-cols-2 gap-4 items-center">
-                  <span className="text-sm">LORA (SDXL)</span>
-                  <code className="text-xs font-mono bg-muted px-3 py-2 rounded-md">
-                    models/loras/SDXL
-                  </code>
-                </div>
-                <div className="grid grid-cols-2 gap-4 items-center">
-                  <span className="text-sm">Checkpoint (SDXL)</span>
-                  <code className="text-xs font-mono bg-muted px-3 py-2 rounded-md">
-                    models/checkpoints/SDXL
-                  </code>
-                </div>
-                <div className="grid grid-cols-2 gap-4 items-center">
-                  <span className="text-sm">Checkpoint (SD 1.5)</span>
-                  <code className="text-xs font-mono bg-muted px-3 py-2 rounded-md">
-                    models/checkpoints/SD15
-                  </code>
-                </div>
+                {Object.entries(settings.categoryMappings).slice(0, 8).map(([key, value]) => (
+                  <div key={key} className="grid grid-cols-2 gap-4 items-center">
+                    <span className="text-sm">{key.replace(/_/g, " ")}</span>
+                    <code className="text-xs font-mono bg-muted px-3 py-2 rounded-md">
+                      {value}
+                    </code>
+                  </div>
+                ))}
               </div>
             </div>
           </CardContent>
@@ -164,8 +171,8 @@ export default function Settings() {
       </div>
 
       <div className="flex justify-end gap-2 pt-4">
-        <Button variant="outline" data-testid="button-reset">
-          Reset to Defaults
+        <Button variant="outline" data-testid="button-reset" onClick={() => savedSettings && setSettings(savedSettings)}>
+          Reset to Saved
         </Button>
         <Button onClick={handleSave} data-testid="button-save">
           <Save className="h-4 w-4 mr-2" />

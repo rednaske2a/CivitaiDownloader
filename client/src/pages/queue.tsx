@@ -1,60 +1,31 @@
-import { useState } from "react";
 import { QueueItem } from "@/components/queue-item";
 import { Button } from "@/components/ui/button";
 import { Trash2, ListOrdered } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import type { DownloadTask } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Queue() {
-  const [queuedTasks, setQueuedTasks] = useState<DownloadTask[]>([
-    {
-      id: "1",
-      modelId: 234567,
-      versionId: 890123,
-      name: "Detail Tweaker LoRA",
-      type: "LORA",
-      baseModel: "Illustrious",
-      thumbnailUrl: "https://picsum.photos/seed/model2/400/533",
-      status: "queued",
-      progress: 0,
-      fileSize: 209715200,
-      addedAt: new Date().toISOString(),
-    },
-    {
-      id: "2",
-      modelId: 345678,
-      versionId: 901234,
-      name: "Anime Style Mix",
-      type: "Checkpoint",
-      baseModel: "SD 1.5",
-      thumbnailUrl: "https://picsum.photos/seed/model3/400/533",
-      status: "queued",
-      progress: 0,
-      fileSize: 4294967296,
-      addedAt: new Date().toISOString(),
-    },
-    {
-      id: "3",
-      modelId: 456789,
-      versionId: 123450,
-      name: "Pony Realism",
-      type: "LORA",
-      baseModel: "Pony",
-      thumbnailUrl: "https://picsum.photos/seed/model4/400/533",
-      status: "queued",
-      progress: 0,
-      fileSize: 157286400,
-      addedAt: new Date().toISOString(),
-    },
-  ]);
+  const { data: queue = [] } = useQuery<DownloadTask[]>({
+    queryKey: ["/api/queue"],
+  });
 
-  const handleRemove = (id: string) => {
-    console.log("Removing from queue:", id);
-    setQueuedTasks(queuedTasks.filter(t => t.id !== id));
+  const queuedTasks = queue.filter(t => t.status === 'queued');
+
+  const handleRemove = async (id: string) => {
+    try {
+      await apiRequest("DELETE", `/api/queue/${id}`);
+    } catch (error) {
+      console.error("Failed to remove from queue:", error);
+    }
   };
 
-  const handleClearAll = () => {
-    console.log("Clearing all queued tasks");
-    setQueuedTasks([]);
+  const handleClearAll = async () => {
+    try {
+      await apiRequest("DELETE", "/api/queue");
+    } catch (error) {
+      console.error("Failed to clear queue:", error);
+    }
   };
 
   return (

@@ -7,33 +7,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Download, Trash2, FolderOpen, Copy, Check, ChevronRight } from "lucide-react";
 import { useLocation } from "wouter";
 import { Separator } from "@/components/ui/separator";
+import { useQuery } from "@tanstack/react-query";
+import type { Model } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ModelDetail() {
   const [, params] = useRoute("/model/:id");
   const [, setLocation] = useLocation();
   const [copiedTag, setCopiedTag] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  const mockModel = {
-    id: params?.id || "1",
-    name: "Realistic Vision XL",
-    type: "Checkpoint",
-    baseModel: "SDXL 1.0",
-    description: "Realistic Vision is a photorealistic model for SDXL that produces high-quality, detailed images with excellent lighting and composition. Best used with negative prompts to avoid common artifacts.\n\nThis model works well for portraits, landscapes, and product photography. Recommended settings:\n- Steps: 25-40\n- CFG Scale: 7-9\n- Sampler: DPM++ 2M Karras",
-    activationTags: ["realistic", "photo", "detailed", "professional", "high quality", "8k", "sharp focus"],
-    thumbnailUrl: "https://picsum.photos/seed/model1/800/600",
-    fileSize: 6442450944,
-    filePath: "/models/checkpoints/SDXL/realistic-vision-xl.safetensors",
-    civitaiUrl: "https://civitai.com/models/123456",
-    downloadedAt: "2025-01-15T10:30:00Z",
-    galleryImages: [
-      "https://picsum.photos/seed/gallery1/600/800",
-      "https://picsum.photos/seed/gallery2/600/800",
-      "https://picsum.photos/seed/gallery3/800/600",
-      "https://picsum.photos/seed/gallery4/600/800",
-      "https://picsum.photos/seed/gallery5/800/600",
-      "https://picsum.photos/seed/gallery6/600/800",
-    ],
-  };
+  const { data: model } = useQuery<Model>({
+    queryKey: ["/api/models", params?.id],
+    enabled: !!params?.id,
+  });
 
   const formatSize = (bytes: number) => {
     return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
@@ -55,6 +43,49 @@ export default function ModelDetail() {
     setTimeout(() => setCopiedTag(null), 2000);
   };
 
+  const handleDownloadAgain = async () => {
+    if (!model) return;
+    try {
+      await apiRequest("POST", "/api/queue", { url: model.civitaiUrl });
+      toast({
+        title: "Added to queue",
+        description: "The model has been added to the download queue.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add model to queue.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!model) return;
+    try {
+      await apiRequest("DELETE", `/api/models/${model.id}`);
+      toast({
+        title: "Model deleted",
+        description: "The model has been removed from your collection.",
+      });
+      setLocation("/gallery");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete model.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (!model) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-muted-foreground">Loading model...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -65,7 +96,7 @@ export default function ModelDetail() {
           Gallery
         </button>
         <ChevronRight className="h-4 w-4" />
-        <span className="text-foreground">{mockModel.name}</span>
+        <span className="text-foreground">{model.name}</span>
       </div>
 
       <div className="flex items-start justify-between gap-6 flex-wrap">
@@ -79,15 +110,15 @@ export default function ModelDetail() {
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="text-3xl font-bold tracking-tight">{mockModel.name}</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{model.name}</h1>
           </div>
           <div className="flex gap-2 ml-12">
-            <Badge variant="secondary">{mockModel.type}</Badge>
-            <Badge variant="outline">{mockModel.baseModel}</Badge>
+            <Badge variant="secondary">{model.type}</Badge>
+            <Badge variant="outline">{model.baseModel}</Badge>
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" data-testid="button-download-again">
+          <Button variant="outline" onClick={handleDownloadAgain} data-testid="button-download-again">
             <Download className="h-4 w-4 mr-2" />
             Download Again
           </Button>
@@ -95,7 +126,7 @@ export default function ModelDetail() {
             <FolderOpen className="h-4 w-4 mr-2" />
             Open Folder
           </Button>
-          <Button variant="destructive" data-testid="button-delete-model">
+          <Button variant="destructive" onClick={handleDelete} data-testid="button-delete-model">
             <Trash2 className="h-4 w-4 mr-2" />
             Delete
           </Button>
@@ -107,8 +138,8 @@ export default function ModelDetail() {
           <Card className="overflow-hidden border-card-border">
             <CardContent className="p-0">
               <img
-                src={mockModel.thumbnailUrl}
-                alt={mockModel.name}
+                src={model.thumbnailUrl}
+                alt={model.name}
                 className="w-full h-auto"
               />
             </CardContent>
@@ -121,29 +152,29 @@ export default function ModelDetail() {
             <CardContent className="space-y-4 text-sm">
               <div className="space-y-1">
                 <span className="text-xs text-muted-foreground">File Size</span>
-                <p className="font-mono">{formatSize(mockModel.fileSize)}</p>
+                <p className="font-mono">{formatSize(model.fileSize)}</p>
               </div>
               <Separator />
               <div className="space-y-1">
                 <span className="text-xs text-muted-foreground">Downloaded</span>
-                <p className="text-sm">{formatDate(mockModel.downloadedAt)}</p>
+                <p className="text-sm">{formatDate(model.downloadedAt)}</p>
               </div>
               <Separator />
               <div className="space-y-1">
                 <span className="text-xs text-muted-foreground">File Path</span>
-                <p className="font-mono text-xs break-all text-muted-foreground">{mockModel.filePath}</p>
+                <p className="font-mono text-xs break-all text-muted-foreground">{model.filePath}</p>
               </div>
               <Separator />
               <div className="space-y-1">
                 <span className="text-xs text-muted-foreground">CivitAI URL</span>
                 <a
-                  href={mockModel.civitaiUrl}
+                  href={model.civitaiUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline text-xs break-all block"
                   data-testid="link-civitai"
                 >
-                  {mockModel.civitaiUrl}
+                  {model.civitaiUrl}
                 </a>
               </div>
             </CardContent>
@@ -160,7 +191,7 @@ export default function ModelDetail() {
                 Activation Tags
               </TabsTrigger>
               <TabsTrigger value="gallery" data-testid="tab-gallery">
-                Gallery ({mockModel.galleryImages.length})
+                Gallery ({model.galleryImages.length})
               </TabsTrigger>
             </TabsList>
 
@@ -171,7 +202,7 @@ export default function ModelDetail() {
                   <CardDescription>Model details and usage recommendations</CardDescription>
                 </CardHeader>
                 <CardContent className="prose prose-sm dark:prose-invert max-w-none">
-                  {mockModel.description.split("\n").map((paragraph, i) => (
+                  {model.description.split("\n").map((paragraph, i) => (
                     <p key={i} className="text-sm leading-relaxed">{paragraph}</p>
                   ))}
                 </CardContent>
@@ -187,43 +218,55 @@ export default function ModelDetail() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {mockModel.activationTags.map((tag) => (
-                      <Badge
-                        key={tag}
-                        variant="secondary"
-                        className="cursor-pointer hover-elevate active-elevate-2 text-sm py-2 px-3"
-                        onClick={() => copyTag(tag)}
-                        data-testid={`tag-${tag.replace(/\s+/g, '-')}`}
-                      >
-                        {copiedTag === tag ? (
-                          <Check className="h-3 w-3 mr-2" />
-                        ) : (
-                          <Copy className="h-3 w-3 mr-2" />
-                        )}
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
+                  {model.activationTags.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No activation tags available</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {model.activationTags.map((tag) => (
+                        <Badge
+                          key={tag}
+                          variant="secondary"
+                          className="cursor-pointer hover-elevate active-elevate-2 text-sm py-2 px-3"
+                          onClick={() => copyTag(tag)}
+                          data-testid={`tag-${tag.replace(/\s+/g, '-')}`}
+                        >
+                          {copiedTag === tag ? (
+                            <Check className="h-3 w-3 mr-2" />
+                          ) : (
+                            <Copy className="h-3 w-3 mr-2" />
+                          )}
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
 
             <TabsContent value="gallery">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {mockModel.galleryImages.map((img, i) => (
-                  <Card key={i} className="overflow-hidden border-card-border hover-elevate">
-                    <CardContent className="p-0">
-                      <img
-                        src={img}
-                        alt={`Gallery image ${i + 1}`}
-                        className="w-full h-auto"
-                        data-testid={`gallery-image-${i}`}
-                      />
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              {model.galleryImages.length === 0 ? (
+                <Card className="border-card-border">
+                  <CardContent className="py-16 text-center">
+                    <p className="text-sm text-muted-foreground">No gallery images available</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {model.galleryImages.map((img, i) => (
+                    <Card key={i} className="overflow-hidden border-card-border hover-elevate">
+                      <CardContent className="p-0">
+                        <img
+                          src={img}
+                          alt={`Gallery image ${i + 1}`}
+                          className="w-full h-auto"
+                          data-testid={`gallery-image-${i}`}
+                        />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>

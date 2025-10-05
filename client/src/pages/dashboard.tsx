@@ -1,49 +1,41 @@
-import { useState } from "react";
 import { URLInputCard } from "@/components/url-input-card";
 import { DownloadCard } from "@/components/download-card";
 import { StatsCard } from "@/components/stats-card";
 import { Database, Download, FolderOpen, Clock } from "lucide-react";
-import type { DownloadTask } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
+import type { DownloadTask, StorageStats } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Dashboard() {
-  const [activeDownloads, setActiveDownloads] = useState<DownloadTask[]>([
-    {
-      id: "1",
-      modelId: 123456,
-      versionId: 789012,
-      name: "Realistic Vision XL",
-      type: "Checkpoint",
-      baseModel: "SDXL 1.0",
-      thumbnailUrl: "https://picsum.photos/seed/model1/400/533",
-      status: "downloading",
-      progress: 65,
-      fileSize: 6442450944,
-      downloadSpeed: 5242880,
-      timeRemaining: 420,
-      addedAt: new Date().toISOString(),
-    },
-    {
-      id: "2",
-      modelId: 234567,
-      versionId: 890123,
-      name: "Detail Tweaker LoRA",
-      type: "LORA",
-      baseModel: "Illustrious",
-      thumbnailUrl: "https://picsum.photos/seed/model2/400/533",
-      status: "queued",
-      progress: 0,
-      fileSize: 209715200,
-      addedAt: new Date().toISOString(),
-    },
-  ]);
+  const { data: queue = [] } = useQuery<DownloadTask[]>({
+    queryKey: ["/api/queue"],
+  });
 
-  const handleDownload = (url: string) => {
-    console.log("Adding to queue:", url);
+  const { data: stats } = useQuery<StorageStats>({
+    queryKey: ["/api/statistics"],
+  });
+
+  const activeDownloads = queue.filter(t => t.status === 'downloading' || t.status === 'queued');
+
+  const handleDownload = async (url: string) => {
+    try {
+      await apiRequest("POST", "/api/queue", { url });
+    } catch (error) {
+      console.error("Failed to add download:", error);
+    }
   };
 
-  const handleCancelDownload = (id: string) => {
-    console.log("Cancelling download:", id);
-    setActiveDownloads(activeDownloads.filter(d => d.id !== id));
+  const handleCancelDownload = async (id: string) => {
+    try {
+      await apiRequest("DELETE", `/api/queue/${id}`);
+    } catch (error) {
+      console.error("Failed to cancel download:", error);
+    }
+  };
+
+  const formatSize = (bytes: number) => {
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(0)} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
   };
 
   return (
@@ -58,24 +50,24 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard
           title="Total Models"
-          value="47"
+          value={stats?.modelCount || 0}
           icon={Database}
           description="Across all categories"
         />
         <StatsCard
           title="Total Storage"
-          value="124 GB"
+          value={stats ? formatSize(stats.totalSize) : "0 GB"}
           icon={FolderOpen}
           description="On disk"
         />
         <StatsCard
           title="Active Downloads"
-          value={activeDownloads.filter(d => d.status === 'downloading').length}
+          value={queue.filter(d => d.status === 'downloading').length}
           icon={Download}
         />
         <StatsCard
           title="Queue Length"
-          value={activeDownloads.filter(d => d.status === 'queued').length}
+          value={queue.filter(d => d.status === 'queued').length}
           icon={Clock}
         />
       </div>
