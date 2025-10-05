@@ -6,12 +6,13 @@ A self-hosted web application for downloading and organizing AI models from Civi
 
 This is a full-stack TypeScript application that allows users to:
 - Download models from CivitAI via URL input
+- Automatically scan and import existing models from ComfyUI installation on startup
 - Automatically organize models into ComfyUI's directory structure by type and base model
-- Download gallery images for each model
+- Download top 100 most popular gallery images for each model with NSFW filtering
 - View activation tags and model descriptions
 - Manage download queue with real-time progress tracking
 - Analyze storage statistics by model type and base model
-- Configure CivitAI API key and ComfyUI installation path
+- Configure CivitAI API key, ComfyUI installation path, and image download preferences
 
 ## Technology Stack
 
@@ -39,6 +40,13 @@ This is a full-stack TypeScript application that allows users to:
 - For production with real file downloads, configure a valid ComfyUI path
 - Without a configured path, the app simulates downloads and tracks metadata only
 
+### Model Scanner
+- Automatically scans ComfyUI installation path on app startup
+- Detects existing model files (.safetensors, .ckpt, .pt, .pth)
+- Infers model type and base model from folder structure and category mappings
+- Re-scans when ComfyUI path is updated in settings
+- Adds pre-existing models to the app's model library
+
 ### Download Flow
 1. User pastes a CivitAI model URL
 2. System fetches model metadata from CivitAI API
@@ -48,8 +56,15 @@ This is a full-stack TypeScript application that allows users to:
    - LORAs: `models/loras/{BaseModel}/`
    - Checkpoints: `models/checkpoints/{BaseModel}/`
    - etc.
-6. Gallery images are downloaded to `gallery/{ModelName}/`
+6. Gallery images (top 100 by popularity) are downloaded to `gallery/{ModelName}/`
 7. Model metadata is stored and displayed in the gallery
+
+### Image Download System
+- Fetches images using CivitAI's /api/v1/images endpoint with pagination
+- Sorts images by popularity score (likes + hearts + laughs)
+- Supports NSFW filtering (configurable in settings)
+- Limits to top N images per model (configurable 10-200, default 100)
+- Automatically deduplicates images when merging NSFW and SFW results
 
 ### Real-Time Updates
 - WebSocket connection for instant progress updates
@@ -109,9 +124,13 @@ Models are organized by type and base model:
 - Detailed breakdown table
 
 ### Settings
-- CivitAI API key management
-- ComfyUI path configuration
-- Category mapping customization
+- **CivitAI API Configuration**: Manage API key for model downloads
+- **ComfyUI Configuration**: Set installation path (triggers model scan when saved)
+- **Image Download Preferences**:
+  - Include NSFW images toggle
+  - Maximum gallery images slider (10-200)
+  - Auto-download images toggle
+- **Category Mappings**: Customize model organization structure
 
 ## Development
 
@@ -131,7 +150,10 @@ client/
     hooks/         # Custom hooks (WebSocket)
     lib/           # Query client, utilities
 server/
-  services/        # CivitAI API, Download Manager
+  services/        # CivitAI API, Download Manager, Model Scanner
+    civitai.ts     # CivitAI API integration with image fetching
+    download-manager.ts  # Queue processing and file downloads
+    model-scanner.ts     # Scans existing models in ComfyUI folder
   storage.ts       # In-memory storage implementation
   routes.ts        # API endpoints and WebSocket
   index.ts         # Server entry point
@@ -167,8 +189,10 @@ Key design principles:
 
 ## Notes
 
-- Storage is in-memory, data is lost on server restart
-- For production use, configure a valid ComfyUI path
+- Storage is in-memory, data is lost on server restart (but model scanner re-imports existing models)
+- For production use, configure a valid ComfyUI path to enable file downloads and model scanning
 - WebSocket automatically falls back to polling if connection fails
 - Download manager processes up to 2 concurrent downloads
-- Gallery images are limited to 6 per model
+- Image downloads are configurable (default 100 images per model)
+- Model scanner runs on startup and when ComfyUI path is saved in settings
+- Image fetching uses efficient pagination to minimize API calls and respects maxImages limit
