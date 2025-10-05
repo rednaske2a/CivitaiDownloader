@@ -4,8 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Download, Trash2, FolderOpen, Copy, Check } from "lucide-react";
+import { ArrowLeft, Download, Trash2, FolderOpen, Copy, Check, ChevronRight } from "lucide-react";
 import { useLocation } from "wouter";
+import { Separator } from "@/components/ui/separator";
 
 export default function ModelDetail() {
   const [, params] = useRoute("/model/:id");
@@ -55,24 +56,37 @@ export default function ModelDetail() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
+    <div className="space-y-8">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <button 
           onClick={() => setLocation("/gallery")}
-          data-testid="button-back"
+          className="hover:text-foreground transition-colors"
         >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold">{mockModel.name}</h1>
-          <div className="flex gap-2 mt-2">
+          Gallery
+        </button>
+        <ChevronRight className="h-4 w-4" />
+        <span className="text-foreground">{mockModel.name}</span>
+      </div>
+
+      <div className="flex items-start justify-between gap-6 flex-wrap">
+        <div className="space-y-3 flex-1">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setLocation("/gallery")}
+              data-testid="button-back"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-3xl font-bold tracking-tight">{mockModel.name}</h1>
+          </div>
+          <div className="flex gap-2 ml-12">
             <Badge variant="secondary">{mockModel.type}</Badge>
             <Badge variant="outline">{mockModel.baseModel}</Badge>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button variant="outline" data-testid="button-download-again">
             <Download className="h-4 w-4 mr-2" />
             Download Again
@@ -88,42 +102,45 @@ export default function ModelDetail() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1">
-          <Card>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-1 space-y-6">
+          <Card className="overflow-hidden border-card-border">
             <CardContent className="p-0">
               <img
                 src={mockModel.thumbnailUrl}
                 alt={mockModel.name}
-                className="w-full h-auto rounded-md"
+                className="w-full h-auto"
               />
             </CardContent>
           </Card>
 
-          <Card className="mt-4">
+          <Card className="border-card-border">
             <CardHeader>
-              <CardTitle className="text-base">Details</CardTitle>
+              <CardTitle className="text-base">Model Information</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div>
-                <span className="text-muted-foreground">File Size:</span>
+            <CardContent className="space-y-4 text-sm">
+              <div className="space-y-1">
+                <span className="text-xs text-muted-foreground">File Size</span>
                 <p className="font-mono">{formatSize(mockModel.fileSize)}</p>
               </div>
-              <div>
-                <span className="text-muted-foreground">Downloaded:</span>
-                <p>{formatDate(mockModel.downloadedAt)}</p>
+              <Separator />
+              <div className="space-y-1">
+                <span className="text-xs text-muted-foreground">Downloaded</span>
+                <p className="text-sm">{formatDate(mockModel.downloadedAt)}</p>
               </div>
-              <div>
-                <span className="text-muted-foreground">File Path:</span>
-                <p className="font-mono text-xs break-all">{mockModel.filePath}</p>
+              <Separator />
+              <div className="space-y-1">
+                <span className="text-xs text-muted-foreground">File Path</span>
+                <p className="font-mono text-xs break-all text-muted-foreground">{mockModel.filePath}</p>
               </div>
-              <div>
-                <span className="text-muted-foreground">CivitAI URL:</span>
+              <Separator />
+              <div className="space-y-1">
+                <span className="text-xs text-muted-foreground">CivitAI URL</span>
                 <a
                   href={mockModel.civitaiUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary hover:underline text-xs break-all"
+                  className="text-primary hover:underline text-xs break-all block"
                   data-testid="link-civitai"
                 >
                   {mockModel.civitaiUrl}
@@ -135,7 +152,7 @@ export default function ModelDetail() {
 
         <div className="lg:col-span-2">
           <Tabs defaultValue="description">
-            <TabsList>
+            <TabsList className="mb-6">
               <TabsTrigger value="description" data-testid="tab-description">
                 Description
               </TabsTrigger>
@@ -147,21 +164,22 @@ export default function ModelDetail() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="description" className="mt-4">
-              <Card>
+            <TabsContent value="description">
+              <Card className="border-card-border">
                 <CardHeader>
                   <CardTitle>Description</CardTitle>
+                  <CardDescription>Model details and usage recommendations</CardDescription>
                 </CardHeader>
                 <CardContent className="prose prose-sm dark:prose-invert max-w-none">
                   {mockModel.description.split("\n").map((paragraph, i) => (
-                    <p key={i}>{paragraph}</p>
+                    <p key={i} className="text-sm leading-relaxed">{paragraph}</p>
                   ))}
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="tags" className="mt-4">
-              <Card>
+            <TabsContent value="tags">
+              <Card className="border-card-border">
                 <CardHeader>
                   <CardTitle>Activation Tags</CardTitle>
                   <CardDescription>
@@ -174,14 +192,14 @@ export default function ModelDetail() {
                       <Badge
                         key={tag}
                         variant="secondary"
-                        className="cursor-pointer hover-elevate active-elevate-2"
+                        className="cursor-pointer hover-elevate active-elevate-2 text-sm py-2 px-3"
                         onClick={() => copyTag(tag)}
                         data-testid={`tag-${tag.replace(/\s+/g, '-')}`}
                       >
                         {copiedTag === tag ? (
-                          <Check className="h-3 w-3 mr-1" />
+                          <Check className="h-3 w-3 mr-2" />
                         ) : (
-                          <Copy className="h-3 w-3 mr-1" />
+                          <Copy className="h-3 w-3 mr-2" />
                         )}
                         {tag}
                       </Badge>
@@ -191,10 +209,10 @@ export default function ModelDetail() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="gallery" className="mt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <TabsContent value="gallery">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {mockModel.galleryImages.map((img, i) => (
-                  <Card key={i} className="overflow-hidden">
+                  <Card key={i} className="overflow-hidden border-card-border hover-elevate">
                     <CardContent className="p-0">
                       <img
                         src={img}

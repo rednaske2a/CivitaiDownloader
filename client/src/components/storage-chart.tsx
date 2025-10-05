@@ -28,21 +28,21 @@ export function StorageChart({ data, title, description }: StorageChartProps) {
   };
 
   return (
-    <Card>
+    <Card className="border-card-border">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={320}>
           <PieChart>
             <Pie
               data={data}
               cx="50%"
               cy="50%"
-              innerRadius={60}
-              outerRadius={100}
-              paddingAngle={2}
+              innerRadius={70}
+              outerRadius={110}
+              paddingAngle={3}
               dataKey="value"
             >
               {data.map((entry, index) => (
@@ -54,8 +54,17 @@ export function StorageChart({ data, title, description }: StorageChartProps) {
                 `${formatSize(props.payload.size)} (${value} files)`,
                 props.payload.name
               ]}
+              contentStyle={{
+                backgroundColor: 'hsl(var(--popover))',
+                border: '1px solid hsl(var(--popover-border))',
+                borderRadius: '0.375rem',
+                padding: '8px 12px',
+              }}
             />
-            <Legend />
+            <Legend 
+              wrapperStyle={{ paddingTop: '20px' }}
+              iconType="circle"
+            />
           </PieChart>
         </ResponsiveContainer>
       </CardContent>

@@ -1,206 +1,326 @@
-# CivitAI Model Manager - Design Guidelines
+# CivitAI Model Manager - Professional Design Guidelines
 
-## Design Approach
+## Design Philosophy
 
-**Selected Approach:** Design System + Productivity Tool Inspiration
-
-Drawing from modern productivity applications like Linear, Notion, and specialized download managers, focusing on clean data presentation, efficient workflows, and visual clarity for technical users.
+**Inspired by:** Linear, Notion, Google Photos, Dropbox  
+**Approach:** Clean, spacious, data-focused design with professional polish
 
 **Core Principles:**
-- Information hierarchy over decoration
-- Instant visual feedback for all operations
-- Organized, scannable layouts
-- Technical precision with approachable UI
+- Maximum white space and breathing room
+- Clear visual hierarchy through typography and spacing
+- Subtle, professional interactions
+- Content-first design
+- Consistent, predictable patterns
 
 ---
 
-## Core Design Elements
+## Color Palette
 
-### A. Color Palette
+### Dark Mode (Primary)
+```
+Background Base:     222 14% 8%    (Deep charcoal)
+Surface Elevated:    222 12% 12%   (Card background)
+Surface Hover:       222 10% 15%   (Subtle interaction)
+Border Subtle:       222 10% 18%   (Dividers)
 
-**Dark Mode Primary (Default):**
-- Background Base: 222 14% 8% (deep slate)
-- Surface: 222 12% 12% (elevated panels)
-- Surface Hover: 222 10% 15% (interactive states)
-- Border: 222 10% 18% (subtle divisions)
-- Text Primary: 0 0% 95% (high contrast)
-- Text Secondary: 0 0% 65% (metadata, labels)
+Text Primary:        0 0% 95%      (High contrast white)
+Text Secondary:      0 0% 70%      (Metadata, labels)
+Text Tertiary:       0 0% 50%      (Timestamps, hints)
 
-**Accent Colors:**
-- Primary Action: 210 100% 58% (vibrant blue for downloads, CTAs)
-- Success: 142 76% 45% (completed downloads, confirmations)
-- Warning: 38 92% 58% (queue status, storage alerts)
-- Error: 0 84% 60% (failed downloads, validation)
+Accent Blue:         210 100% 58%  (Primary actions)
+Success Green:       142 76% 45%   (Completed)
+Warning Orange:      38 92% 58%    (Queued)
+Error Red:           0 84% 60%     (Failed)
+```
 
-**Status Indicators:**
-- Downloading: 210 100% 58% (animated)
-- Queued: 38 92% 58% (static)
-- Complete: 142 76% 45% (checkmark)
-- Failed: 0 84% 60% (alert icon)
+### Light Mode
+```
+Background Base:     0 0% 100%     (Pure white)
+Surface Elevated:    0 0% 98%      (Off-white cards)
+Border Subtle:       220 10% 88%   (Light dividers)
 
-### B. Typography
+Text Primary:        222 14% 12%   (Near black)
+Text Secondary:      222 14% 45%   (Gray)
+```
+
+---
+
+## Typography
 
 **Font System:**
-- Primary: Inter (via Google Fonts) - clean, technical readability
-- Monospace: JetBrains Mono (file paths, technical data)
+- Primary: Inter (clean, professional sans-serif)
+- Monospace: JetBrains Mono (paths, technical data)
 
-**Scale:**
-- Display (Page Headers): text-3xl font-bold (30px)
-- Section Headers: text-xl font-semibold (20px)
-- Body: text-base font-normal (16px)
-- Metadata/Labels: text-sm font-medium (14px)
-- Captions/Technical: text-xs font-mono (12px)
+**Type Scale (Professional Hierarchy):**
+```
+Page Title:     text-3xl font-bold      (30px / 1.875rem)
+Section:        text-xl font-semibold   (20px / 1.25rem)
+Card Title:     text-base font-semibold (16px / 1rem)
+Body:           text-sm                 (14px / 0.875rem)
+Metadata:       text-xs text-muted-fg   (12px / 0.75rem)
+Mono:           text-xs font-mono       (12px / 0.75rem)
+```
 
-### C. Layout System
+---
 
-**Spacing Primitives:** Tailwind units of 2, 4, 6, 8, 12, 16
-- Consistent component padding: p-6
-- Section spacing: space-y-8
-- Card gaps: gap-4 for grids
-- Form field spacing: space-y-4
+## Spacing System
 
-**Container Strategy:**
-- Sidebar Navigation: fixed w-64 (256px)
-- Main Content: max-w-7xl mx-auto px-8
-- Modal/Settings: max-w-2xl
-- Gallery Grid: Responsive (grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4)
+**Professional Padding/Spacing:**
+```
+Page Container:      px-8 py-8       (Generous breathing room)
+Section Gap:         space-y-8       (Clear separation)
+Card Padding:        p-6             (Comfortable internal space)
+Card Gap:            gap-6           (Not cramped)
+Component Gap:       gap-4           (Related elements)
+Tight Grouping:      gap-2           (Labels & values)
+```
+
+**Grid Systems:**
+```
+Dashboard Stats:     grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6
+Gallery:            grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6
+Content + Sidebar:   grid-cols-1 lg:grid-cols-3 gap-8
+```
 
 ---
 
 ## Component Library
 
-### Navigation
-**Sidebar (Fixed Left):**
-- Background: Surface color
-- Active state: Primary accent with left border (border-l-4)
-- Icons: Heroicons (outline for inactive, solid for active)
-- Sections: Dashboard, Gallery, Queue, Settings, Statistics
+### Card Design (Refined)
+**Base Card:**
+- Background: bg-card
+- Border: border border-card-border (subtle)
+- Rounded: rounded-lg
+- Padding: p-6
+- Hover: hover-elevate (subtle lift)
+- Shadow: Minimal, built into elevation system
+
+**Gallery Cards (Image-focused):**
+- 3:4 aspect ratio images
+- NO gap between image and card edge
+- Image fills top, metadata below
+- Hover: Scale 1.02, increase shadow
+- Actions appear on hover (overlay on image)
+
+### Statistics Cards
+**Layout:**
+```
+┌─────────────────────────────┐
+│  Label (text-sm muted)      │
+│  Value (text-3xl bold)      │
+│  Description (text-xs)      │
+│                       [Icon]│
+└─────────────────────────────┘
+```
+- Icon: 48×48px in subtle colored circle
+- No aggressive borders
+- Clean, spacious layout
+
+### Model Gallery Cards
+**Structure:**
+```
+┌─────────────────┐
+│                 │
+│     Image       │  ← 3:4 aspect ratio
+│                 │
+├─────────────────┤
+│ Model Name      │  ← Truncate with ellipsis
+│ [Type] [Base]   │  ← Small badges
+│ 2.5 GB    [👁][🗑]│ ← Actions right-aligned
+└─────────────────┘
+```
+- Image edge-to-edge in card
+- 24px padding on text section
+- Hover shows semi-transparent overlay with actions over image
+
+### Download Progress Cards
+**Layout:**
+```
+[Thumbnail] Model Name           [X]
+            [Type] [Base Model]
+            ━━━━━━━━━━━━━━━━━━━━ 65%
+            2.1 GB • 5.2 MB/s • 7m 20s
+```
+- Horizontal layout
+- Monospace for technical data
+- Progress bar height: 8px
+- Thumbnail: 64×64px, rounded
+
+### Navigation Sidebar
+**Style:**
+- Background: sidebar color (slightly different from main bg)
+- Active state: Left border accent (4px) + background highlight
+- Icon + label layout
+- 16px padding per item
+- Grouped by function
+- Logo/title at top with adequate spacing
+
+---
+
+## Layout Patterns
 
 ### Dashboard Page
-**URL Input Card:**
-- Prominent search-style input with paste button
-- Validation indicator (checkmark/error icon inline)
-- Large "Download" button (primary accent, w-full)
-- Recent URLs dropdown below
+**Structure:**
+1. Page header with title + description (mb-8)
+2. 4-column stats grid (gap-6)
+3. Two-column layout:
+   - Left: URL input card
+   - Right: Active downloads list
+4. Generous vertical spacing (space-y-8)
 
-**Active Downloads Panel:**
-- List of download cards with progress bars
-- Each card shows: thumbnail preview, model name, file size, progress percentage
-- Progress bar: gradient from primary to success on completion
-- Speed/time remaining in monospace font
-
-**Quick Stats Row:**
-- 4-column grid of metric cards
-- Each card: number (text-3xl font-bold), label (text-sm text-secondary)
-- Metrics: Total Models, Total Size, Active Downloads, Queue Length
-
-### Gallery View
-**Model Cards (Grid Layout):**
-- Aspect ratio 3:4 thumbnail images
-- Hover: slight scale transform (1.02) with shadow increase
-- Overlay on hover: quick action buttons (View Details, Delete)
-- Bottom section: Model name (truncated), type badge, file size
-
-**Type Badges:**
-- Rounded pills with category colors
-- Examples: LORA (blue), Checkpoint (purple), Embedding (green)
-- Small size (text-xs px-2 py-1)
+### Gallery Page
+**Structure:**
+1. Sticky header with search (mb-8)
+2. Uniform grid (gap-6, not cramped)
+3. Infinite scroll or pagination
+4. Empty state: Centered with icon + message
 
 ### Model Detail Page
-**Hero Section:**
-- Large preview image carousel (max-h-96)
-- Title and metadata row (type, version, file size)
-- Primary action: Download Again button
-- Secondary actions: Delete, Open Folder
-
-**Tabbed Content:**
-- Description tab: rich text formatting, preserve line breaks
-- Activation Tags tab: copyable tag chips (click to copy)
-- Gallery tab: masonry grid of downloaded images
-- Files tab: list of associated files with paths
+**Structure:**
+1. Back button + title + actions (mb-8)
+2. Two-column layout:
+   - Left (1/3): Hero image + metadata card
+   - Right (2/3): Tabbed content
+3. Breadcrumb navigation above header
+4. White space between sections
 
 ### Settings Page
-**Form Sections:**
-- Section headers with dividers
-- API Key: password input with show/hide toggle
-- ComfyUI Path: file path input with browse button (displays in monospace)
-- Category Mappings: expandable accordion for each model type
-- Action buttons: sticky bottom bar (Save, Cancel, Reset to Defaults)
-
-### Queue Management
-**Queue List:**
-- Draggable cards (visual grab handle on left)
-- Each item: thumbnail, name, priority badge, remove button
-- Empty state: centered illustration with "No queued downloads"
-
-### Statistics Page
-**Storage Breakdown:**
-- Donut chart showing space by model type
-- Legend with percentages and absolute sizes
-- Bar chart: models count by category
-- Data table: detailed breakdown (sortable columns)
+**Structure:**
+1. Max-width container (max-w-4xl)
+2. Card-based sections
+3. Sticky save bar at bottom
+4. Clear section headings with descriptions
+5. Form fields with proper spacing (space-y-4)
 
 ---
 
-## Data Displays
+## Interactions
 
-**Progress Indicators:**
-- Linear progress bars (h-2, rounded-full)
-- Circular progress for dashboard widgets
-- Percentage text overlay (centered, font-medium)
+### Hover States
+- Cards: Subtle background shift (hover-elevate)
+- Buttons: Built-in elevation system
+- Images: Scale 1.02, smooth transition
+- Links: Underline on hover
 
-**Tables:**
-- Striped rows (odd rows with subtle background)
-- Sortable headers with arrow indicators
-- Sticky headers on scroll
-- Row hover state with slight background change
+### Active/Pressed States
+- Buttons: active-elevate-2
+- Cards: Optional for clickable cards
+- Toggles: Background fill change
 
----
+### Micro-interactions
+- Smooth transitions: 200ms ease
+- Progress bars: Animated fill
+- Skeleton loading for async content
+- Toast notifications: Slide in from top-right
+- Modal overlays: Fade background
 
-## Interactions & States
-
-**Button States:**
-- Primary: solid background, hover darkens
-- Secondary: outline style, hover fills
-- Disabled: 50% opacity, no pointer events
-
-**Loading States:**
-- Skeleton screens for gallery while loading
-- Spinner for download operations
-- Shimmer effect on placeholder cards
-
-**Animations:** Minimal, functional only
-- Progress bar smooth transitions
-- Card hover transforms (0.2s ease)
-- Page transitions: simple fade
-- Toast notifications: slide in from top-right
+### Focus States
+- Visible ring on keyboard navigation
+- High contrast for accessibility
+- Tab order follows visual hierarchy
 
 ---
 
-## Responsive Behavior
+## Data Visualization
 
-**Desktop First (1280px+):**
-- Sidebar always visible
-- 4-column gallery grid
-- Split-pane layouts where appropriate
+### Storage Charts (Recharts)
+- Donut charts with center label
+- Color: Use chart-1 through chart-5
+- Legend: Below chart, horizontal
+- Hover tooltips with detailed info
+- Responsive: min-height 300px
 
-**Tablet (768px-1279px):**
-- Collapsible sidebar (hamburger menu)
-- 2-3 column gallery grid
-- Stacked form layouts
+### Progress Bars
+- Height: 8px
+- Rounded: rounded-full
+- Smooth fill animation
+- Color based on status (downloading, queued, complete, failed)
 
-**Mobile (<768px):**
-- Hidden sidebar, bottom navigation
-- Single column gallery
-- Full-width cards and forms
+### Tables
+- Zebra striping: Subtle (bg-muted/5)
+- Header: Sticky, bold, smaller text
+- Row hover: bg-muted/10
+- Borders: Subtle horizontal lines only
+- Monospace for numbers/sizes
+- Right-align numeric data
 
 ---
 
-## Images
+## Imagery
 
-No hero images required. This is a utility application focused on functionality.
+### Model Thumbnails
+- Aspect ratio: 3:4 (portrait)
+- Quality: High-res, optimized
+- Loading: Skeleton placeholder
+- Error: Fallback pattern
 
-**Image Usage:**
-- Model thumbnails in gallery (user-uploaded content from CivitAI)
-- Empty state illustrations (simple, minimal SVG illustrations)
-- Icon system: Heroicons throughout for consistency
+### Icons
+- Source: Lucide React (16px or 20px typically)
+- Consistent stroke width
+- Aligned with text baseline
+- Color: text-muted-foreground or primary for actions
+
+---
+
+## Responsive Design
+
+### Breakpoints
+```
+sm:  640px   (Mobile landscape)
+md:  768px   (Tablet)
+lg:  1024px  (Desktop)
+xl:  1280px  (Large desktop)
+```
+
+### Mobile Adaptations
+- Sidebar: Collapsible with toggle
+- Grid: Single column on mobile
+- Touch targets: Minimum 44×44px
+- Bottom sheet for actions
+- Simplified navigation
+
+---
+
+## Accessibility
+
+- **Contrast:** WCAG AA minimum (4.5:1 for text)
+- **Keyboard:** Full navigation without mouse
+- **Screen readers:** Proper ARIA labels
+- **Focus:** Visible indicators
+- **Motion:** Respect prefers-reduced-motion
+
+---
+
+## Professional Polish Checklist
+
+✓ Generous white space (never cramped)  
+✓ Consistent spacing (8/16/24/32/48)  
+✓ Clear visual hierarchy (size, weight, color)  
+✓ Subtle borders (not harsh lines)  
+✓ Professional elevation (not heavy shadows)  
+✓ Unified icon system (Lucide)  
+✓ Cohesive color usage (semantic)  
+✓ Smooth micro-interactions  
+✓ Loading states for everything  
+✓ Empty states with guidance  
+✓ Error states with recovery actions  
+✓ Responsive across all devices  
+✓ Dark mode optimized  
+
+---
+
+## Anti-Patterns to Avoid
+
+❌ Cramped spacing (min 24px between major sections)  
+❌ Too many colors (stick to semantic palette)  
+❌ Harsh shadows (use elevation system)  
+❌ Inconsistent rounding (use theme values)  
+❌ Poor contrast (check in both modes)  
+❌ Missing empty/loading states  
+❌ Unlabeled icon buttons  
+❌ Tiny touch targets on mobile  
+❌ Cluttered interfaces (progressive disclosure)  
+
+---
+
+This design system creates a professional, polished application that feels modern, clean, and trustworthy - suitable for serious model management workflows.

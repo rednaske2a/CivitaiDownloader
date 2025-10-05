@@ -30,17 +30,8 @@ export function DownloadCard({ task, onCancel }: DownloadCardProps) {
     return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
   };
 
-  const getStatusColor = (status: DownloadTask['status']) => {
-    switch (status) {
-      case 'downloading': return 'bg-chart-1';
-      case 'queued': return 'bg-chart-4';
-      case 'completed': return 'bg-chart-2';
-      case 'failed': return 'bg-chart-5';
-    }
-  };
-
   return (
-    <Card data-testid={`download-card-${task.id}`}>
+    <Card data-testid={`download-card-${task.id}`} className="border-card-border">
       <CardContent className="p-4">
         <div className="flex gap-4">
           <div className="w-16 h-16 bg-muted rounded-md flex-shrink-0 overflow-hidden">
@@ -52,13 +43,13 @@ export function DownloadCard({ task, onCancel }: DownloadCardProps) {
               />
             )}
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <div className="flex-1 min-w-0">
-                <h4 className="font-medium truncate" data-testid={`text-name-${task.id}`}>
+          <div className="flex-1 min-w-0 space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0 space-y-2">
+                <h4 className="font-semibold text-sm truncate leading-tight" data-testid={`text-name-${task.id}`}>
                   {task.name}
                 </h4>
-                <div className="flex gap-2 mt-1">
+                <div className="flex gap-2">
                   <Badge variant="secondary" className="text-xs">
                     {task.type}
                   </Badge>
@@ -79,20 +70,22 @@ export function DownloadCard({ task, onCancel }: DownloadCardProps) {
                 </Button>
               )}
             </div>
-            <Progress value={task.progress} className="h-2 mb-2" />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span className="font-mono">
-                {task.progress}% • {formatSize(task.fileSize)}
-              </span>
-              {task.status === 'downloading' && (
+            <div className="space-y-2">
+              <Progress value={task.progress} className="h-2" />
+              <div className="flex justify-between text-xs text-muted-foreground">
                 <span className="font-mono">
-                  {formatSpeed(task.downloadSpeed)} • {formatTime(task.timeRemaining)}
+                  {task.progress}% • {formatSize(task.fileSize)}
                 </span>
-              )}
-              {task.status === 'queued' && <span>Queued</span>}
-              {task.status === 'failed' && (
-                <span className="text-destructive">{task.error || 'Failed'}</span>
-              )}
+                {task.status === 'downloading' && (
+                  <span className="font-mono">
+                    {formatSpeed(task.downloadSpeed)} • {formatTime(task.timeRemaining)}
+                  </span>
+                )}
+                {task.status === 'queued' && <span>Queued</span>}
+                {task.status === 'failed' && (
+                  <span className="text-destructive">{task.error || 'Failed'}</span>
+                )}
+              </div>
             </div>
           </div>
         </div>

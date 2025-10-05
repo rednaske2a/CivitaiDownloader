@@ -33,32 +33,32 @@ export default function Statistics() {
   const totalModels = storageByType.reduce((acc, item) => acc + item.value, 0);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Storage Statistics</h1>
-        <p className="text-muted-foreground mt-2">
+    <div className="space-y-8">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Storage Statistics</h1>
+        <p className="text-sm text-muted-foreground">
           Analyze your model collection and disk usage
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="border-card-border">
           <CardHeader>
             <CardTitle className="text-base">Total Storage Used</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold">{formatSize(totalSize)}</p>
+            <p className="text-4xl font-bold tracking-tight">{formatSize(totalSize)}</p>
             <p className="text-sm text-muted-foreground mt-2">
               Across {totalModels} models
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-card-border">
           <CardHeader>
             <CardTitle className="text-base">Average Model Size</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold">{formatSize(totalSize / totalModels)}</p>
+            <p className="text-4xl font-bold tracking-tight">{formatSize(totalSize / totalModels)}</p>
             <p className="text-sm text-muted-foreground mt-2">
               Per model
             </p>
@@ -66,7 +66,7 @@ export default function Statistics() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <StorageChart
           data={storageByType}
           title="Storage by Model Type"
@@ -79,7 +79,7 @@ export default function Statistics() {
         />
       </div>
 
-      <Card>
+      <Card className="border-card-border">
         <CardHeader>
           <CardTitle>Detailed Breakdown</CardTitle>
           <CardDescription>
@@ -101,14 +101,14 @@ export default function Statistics() {
               {storageByType.map((item) => (
                 <TableRow key={item.name}>
                   <TableCell className="font-medium">{item.name}</TableCell>
-                  <TableCell className="text-right font-mono">{item.value}</TableCell>
-                  <TableCell className="text-right font-mono">
+                  <TableCell className="text-right font-mono text-sm">{item.value}</TableCell>
+                  <TableCell className="text-right font-mono text-sm">
                     {formatSize(item.size)}
                   </TableCell>
-                  <TableCell className="text-right font-mono">
+                  <TableCell className="text-right font-mono text-sm">
                     {formatSize(item.size / item.value)}
                   </TableCell>
-                  <TableCell className="text-right font-mono">
+                  <TableCell className="text-right font-mono text-sm">
                     {((item.size / totalSize) * 100).toFixed(1)}%
                   </TableCell>
                 </TableRow>

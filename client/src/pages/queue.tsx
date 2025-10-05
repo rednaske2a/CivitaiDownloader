@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { QueueItem } from "@/components/queue-item";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash2, ListOrdered } from "lucide-react";
 import type { DownloadTask } from "@shared/schema";
 
 export default function Queue() {
@@ -58,11 +58,11 @@ export default function Queue() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-3xl font-bold">Download Queue</h1>
-          <p className="text-muted-foreground mt-2">
+    <div className="space-y-8">
+      <div className="flex items-start justify-between gap-6 flex-wrap">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">Download Queue</h1>
+          <p className="text-sm text-muted-foreground">
             Manage your pending downloads
           </p>
         </div>
@@ -79,17 +79,17 @@ export default function Queue() {
       </div>
 
       {queuedTasks.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
-            <Trash2 className="h-8 w-8 text-muted-foreground" />
+        <div className="text-center py-20">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted/50 mb-4">
+            <ListOrdered className="h-8 w-8 text-muted-foreground/50" />
           </div>
           <h3 className="text-lg font-semibold mb-2">No queued downloads</h3>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Add models from the dashboard to start downloading
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {queuedTasks.map((task, index) => (
             <QueueItem
               key={task.id}

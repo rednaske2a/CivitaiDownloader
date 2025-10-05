@@ -26,7 +26,7 @@ export function URLInputCard({ onDownload }: URLInputCardProps) {
   };
 
   return (
-    <Card>
+    <Card className="border-card-border">
       <CardHeader>
         <CardTitle>Download Model</CardTitle>
         <CardDescription>
@@ -34,18 +34,16 @@ export function URLInputCard({ onDownload }: URLInputCardProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="https://civitai.com/models/..."
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              onKeyPress={handleKeyPress}
-              className="pl-9"
-              data-testid="input-model-url"
-            />
-          </div>
+        <div className="relative">
+          <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="https://civitai.com/models/..."
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            onKeyPress={handleKeyPress}
+            className="pl-9"
+            data-testid="input-model-url"
+          />
         </div>
         <Button
           onClick={handleDownload}

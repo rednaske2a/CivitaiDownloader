@@ -48,14 +48,14 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground mt-2">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-sm text-muted-foreground">
           Download and manage your CivitAI models
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard
           title="Total Models"
           value="47"
@@ -80,28 +80,27 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <URLInputCard onDownload={handleDownload} />
 
         <div className="space-y-4">
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Active Downloads</h2>
-            {activeDownloads.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                No active downloads
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {activeDownloads.map(task => (
-                  <DownloadCard
-                    key={task.id}
-                    task={task}
-                    onCancel={handleCancelDownload}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+          <h2 className="text-xl font-semibold tracking-tight">Active Downloads</h2>
+          {activeDownloads.length === 0 ? (
+            <div className="text-center py-16 text-muted-foreground">
+              <Download className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+              <p className="text-sm">No active downloads</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {activeDownloads.map(task => (
+                <DownloadCard
+                  key={task.id}
+                  task={task}
+                  onCancel={handleCancelDownload}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

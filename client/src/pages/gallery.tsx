@@ -123,11 +123,11 @@ export default function Gallery() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-3xl font-bold">Model Gallery</h1>
-          <p className="text-muted-foreground mt-2">
+    <div className="space-y-8">
+      <div className="flex items-start justify-between gap-6 flex-wrap">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">Model Gallery</h1>
+          <p className="text-sm text-muted-foreground">
             Browse and manage your downloaded models
           </p>
         </div>
@@ -143,20 +143,24 @@ export default function Gallery() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {filteredModels.map(model => (
-          <ModelCard
-            key={model.id}
-            model={model}
-            onView={handleViewModel}
-            onDelete={handleDeleteModel}
-          />
-        ))}
-      </div>
-
-      {filteredModels.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-          No models found matching "{searchQuery}"
+      {filteredModels.length === 0 ? (
+        <div className="text-center py-20">
+          <Search className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+          <h3 className="text-lg font-semibold mb-2">No models found</h3>
+          <p className="text-sm text-muted-foreground">
+            No models match "{searchQuery}"
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredModels.map(model => (
+            <ModelCard
+              key={model.id}
+              model={model}
+              onView={handleViewModel}
+              onDelete={handleDeleteModel}
+            />
+          ))}
         </div>
       )}
     </div>
