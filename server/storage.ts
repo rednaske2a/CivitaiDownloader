@@ -49,6 +49,11 @@ export class MemStorage implements IStorage {
         "Controlnet": path.join("models", "controlnet"),
         "Poses": path.join("models", "poses"),
       },
+      autoDownloadImages: true,
+      maxGalleryImages: 100,
+      concurrentDownloads: 3,
+      downloadOnlyNsfw: false,
+      enableAnimations: true,
     };
     this.models = new Map();
     this.downloadQueue = new Map();

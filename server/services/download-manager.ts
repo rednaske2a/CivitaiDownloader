@@ -23,10 +23,11 @@ export class DownloadManager extends EventEmitter {
   private startProcessingQueue() {
     this.downloadInterval = setInterval(async () => {
       const queue = await storage.getDownloadQueue();
+      const settings = await storage.getSettings();
       const queuedTasks = queue.filter(t => t.status === "queued");
       const downloadingTasks = queue.filter(t => t.status === "downloading");
 
-      if (downloadingTasks.length < 2 && queuedTasks.length > 0) {
+      if (downloadingTasks.length < settings.concurrentDownloads && queuedTasks.length > 0) {
         const nextTask = queuedTasks[0];
         if (!this.activeDownloads.has(nextTask.id)) {
           this.processDownload(nextTask.id);
@@ -96,7 +97,7 @@ export class DownloadManager extends EventEmitter {
       }
 
       let filePath = "";
-      const galleryImages: string[] = [];
+      const galleryImages = await this.civitaiService.getImagesForVersion(task.versionId, settings.maxGalleryImages);
 
       if (settings.comfyuiPath && fs.existsSync(settings.comfyuiPath)) {
         try {
@@ -126,26 +127,6 @@ export class DownloadManager extends EventEmitter {
 
           fs.writeFileSync(filePath, fileBuffer);
           console.log(`[Download] Saved model file to: ${filePath}`);
-
-          if (version.images.length > 0) {
-            // Sanitize folder name for Windows - remove invalid characters
-            const sanitizedModelName = model.name.replace(/[<>:"|?*\/\\]/g, "_").replace(/[^a-z0-9_-]/gi, "_");
-            const imagesPath = path.join(fullPath, "gallery", sanitizedModelName);
-            if (!fs.existsSync(imagesPath)) {
-              fs.mkdirSync(imagesPath, { recursive: true });
-            }
-
-            for (let i = 0; i < Math.min(version.images.length, 6); i++) {
-              try {
-                const imageBuffer = await this.civitaiService.downloadFile(version.images[i].url);
-                const imagePath = path.join(imagesPath, `image_${i}.jpg`);
-                fs.writeFileSync(imagePath, imageBuffer);
-                galleryImages.push(imagePath);
-              } catch (err) {
-                console.error(`Failed to download gallery image ${i}:`, err);
-              }
-            }
-          }
         } catch (fsError) {
           console.error("[Download] File system error:", fsError);
           throw new Error(`Failed to write files: ${fsError instanceof Error ? fsError.message : "Unknown error"}`);
@@ -167,7 +148,6 @@ export class DownloadManager extends EventEmitter {
         // Use path.join for cross-platform compatibility even in simulated mode
         const sanitizedModelName = model.name.replace(/[^a-z0-9]/gi, "_");
         filePath = path.join("simulated", "path", task.type.toLowerCase(), `${sanitizedModelName}.safetensors`);
-        galleryImages.push(...version.images.slice(0, 6).map((img, i) => img.url));
       }
 
       const savedModel = await storage.addModel({

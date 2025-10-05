@@ -21,6 +21,39 @@ export type ModelType = 'LORA' | 'Checkpoint' | 'TextualInversion' | 'Hypernetwo
 export type ModelStatus = 'downloading' | 'queued' | 'completed' | 'failed';
 export type BaseModel = 'SD 1.5' | 'SDXL 1.0' | 'Pony' | 'Illustrious' | 'Flux.1' | 'Other';
 
+export interface ImageMetadata {
+  id: number;
+  url: string;
+  width: number;
+  height: number;
+  nsfw: boolean;
+  nsfwLevel?: number;
+  stats?: {
+    cryCount: number;
+    laughCount: number;
+    likeCount: number;
+    dislikeCount: number;
+    heartCount: number;
+    commentCount: number;
+  };
+  meta?: {
+    prompt?: string;
+    negativePrompt?: string;
+    seed?: number;
+    steps?: number;
+    sampler?: string;
+    cfgScale?: number;
+    clipSkip?: number;
+    resources?: Array<{
+      id: number;
+      name: string;
+      type: string;
+      weight?: number;
+    }>;
+  };
+  positiveScore: number;
+}
+
 export interface Model {
   id: string;
   name: string;
@@ -35,7 +68,7 @@ export interface Model {
   civitaiId: number;
   versionId: number;
   downloadedAt: string;
-  galleryImages: string[];
+  galleryImages: ImageMetadata[];
 }
 
 export interface DownloadTask {
@@ -59,6 +92,11 @@ export interface AppSettings {
   civitaiApiKey: string;
   comfyuiPath: string;
   categoryMappings: Record<string, string>;
+  autoDownloadImages: boolean;
+  maxGalleryImages: number;
+  concurrentDownloads: number;
+  downloadOnlyNsfw: boolean;
+  enableAnimations: boolean;
 }
 
 export interface StorageStats {

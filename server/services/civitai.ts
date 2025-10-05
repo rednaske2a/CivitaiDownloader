@@ -1,7 +1,41 @@
 import axios from "axios";
-import type { ModelType, BaseModel } from "@shared/schema";
+import type { ModelType, BaseModel, ImageMetadata } from "@shared/schema";
 
 const CIVITAI_API_BASE = "https://civitai.com/api/v1";
+
+interface CivitAIImage {
+  id: number;
+  url: string;
+  nsfw: boolean;
+  nsfwLevel?: number;
+  width: number;
+  height: number;
+  hash: string;
+  type: string;
+  meta?: {
+    prompt?: string;
+    negativePrompt?: string;
+    seed?: number;
+    steps?: number;
+    sampler?: string;
+    cfgScale?: number;
+    clipSkip?: number;
+    resources?: Array<{
+      id: number;
+      name: string;
+      type: string;
+      weight?: number;
+    }>;
+  };
+  stats?: {
+    cryCount: number;
+    laughCount: number;
+    likeCount: number;
+    dislikeCount: number;
+    heartCount: number;
+    commentCount: number;
+  };
+}
 
 interface CivitAIModelVersion {
   id: number;
@@ -14,11 +48,7 @@ interface CivitAIModelVersion {
     sizeKB: number;
     downloadUrl: string;
   }>;
-  images: Array<{
-    url: string;
-    width: number;
-    height: number;
-  }>;
+  images: CivitAIImage[];
   trainedWords: string[];
 }
 
@@ -122,5 +152,51 @@ export class CivitAIService {
     });
     
     return Buffer.from(response.data);
+  }
+
+  async getImagesForVersion(versionId: number, maxImages: number = 100): Promise<ImageMetadata[]> {
+    try {
+      const response = await axios.get(`${CIVITAI_API_BASE}/model-versions/${versionId}`, {
+        headers: this.getHeaders(),
+      });
+      
+      const version: CivitAIModelVersion = response.data;
+      
+      if (!version.images || version.images.length === 0) {
+        return [];
+      }
+
+      const imagesWithScores: ImageMetadata[] = version.images.map(img => {
+        const stats = img.stats || {
+          cryCount: 0,
+          laughCount: 0,
+          likeCount: 0,
+          dislikeCount: 0,
+          heartCount: 0,
+          commentCount: 0,
+        };
+        
+        const positiveScore = stats.likeCount + stats.heartCount + stats.laughCount;
+        
+        return {
+          id: img.id,
+          url: img.url,
+          width: img.width,
+          height: img.height,
+          nsfw: img.nsfw,
+          nsfwLevel: img.nsfwLevel,
+          stats,
+          meta: img.meta,
+          positiveScore,
+        };
+      });
+
+      imagesWithScores.sort((a, b) => b.positiveScore - a.positiveScore);
+      
+      return imagesWithScores.slice(0, maxImages);
+    } catch (error) {
+      console.error("Error fetching images for version:", error);
+      return [];
+    }
   }
 }

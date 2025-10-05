@@ -17,6 +17,11 @@ export default function Settings() {
     civitaiApiKey: "",
     comfyuiPath: "",
     categoryMappings: {},
+    autoDownloadImages: true,
+    maxGalleryImages: 100,
+    concurrentDownloads: 3,
+    downloadOnlyNsfw: false,
+    enableAnimations: true,
   });
 
   const { data: savedSettings } = useQuery<AppSettings>({
